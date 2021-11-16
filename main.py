@@ -1,32 +1,51 @@
 import sys
-from math import cos, pi, sin
 from random import randint
+
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QPainter, QPen, QBrush, QPalette
+from PyQt5.QtGui import QPainter, QBrush, QColor
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton
+from UI import UI
 
 SCREEN_SIZE = [500, 500]
-# Задаём длину стороны и количество углов
-SIDE_LENGTH = 200
-SIDES_COUNT = 5
 
 
-class DrawStar(QWidget):
+def parse(n: int) -> str:
+    h = '0123456789ABCDEF'
+    s = ''
+    while n > 0:
+        s = h[n % 16] + s
+        n = n // 16
+    return s
+
+
+def generate_random_color():
+    r, g, b = randint(50, 255), randint(50, 255), randint(50, 255)
+    return f'#{parse(r)}{parse(g)}{parse(b)}'
+
+
+class Circle:
+    def __init__(self, x, y, r, color):
+        self.x = x
+        self.y = y
+        self.r = r
+        self.color = color
+
+    def get_parameters(self):
+        return self.x, self.y, self.r, self.r
+
+
+class DrawStar(UI):
     signal = pyqtSignal()
 
     def __init__(self):
         super().__init__()
-        self.setFixedSize(*SCREEN_SIZE)
         self.initUI()
-        self.btn = QPushButton(self)
+        self.initUI()
         self.btn.clicked.connect(self.btn_pushed)
+        self.circles = []
 
     def btn_pushed(self):
-        self.update()
-
-    def initUI(self):
-        self.setGeometry(300, 300, *SCREEN_SIZE)
-        self.setWindowTitle('Рисуем звезду')
+        self.repaint()
 
     def paintEvent(self, event):
         qp = QPainter()
@@ -36,9 +55,12 @@ class DrawStar(QWidget):
 
     def draw_star(self, qp):
         size = randint(50, 200)
-        x, y = randint(100, SCREEN_SIZE[0] - size), randint(100, SCREEN_SIZE[1] - size)
-        qp.setBrush(QBrush(Qt.yellow, Qt.SolidPattern))
-        qp.drawEllipse(x, y, size, size)
+        x, y = randint(size, SCREEN_SIZE[0] - size), randint(size, SCREEN_SIZE[1] - size)
+        color = QColor(generate_random_color())
+        self.circles.append(Circle(x, y, size, color))
+        for circle in self.circles:
+            qp.setBrush(QBrush(QColor(circle.color), Qt.SolidPattern))
+            qp.drawEllipse(*circle.get_parameters())
 
 
 if __name__ == '__main__':
